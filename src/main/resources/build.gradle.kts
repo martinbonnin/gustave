@@ -1,10 +1,10 @@
 plugins {
-    kotlin("jvm").version("1.3.72")
+    kotlin("jvm").version("{{kotlinVersion}}")
     id("maven-publish")
 }
 
-group = "net.mbonnin"
-version = "0.0.2-SNAPSHOT"
+group = "{{group}}"
+version = "0.0.1-SNAPSHOT"
 
 publishing {
     publications {
@@ -13,17 +13,17 @@ publishing {
 
             pom {
                 groupId = rootProject.group as String
-                artifactId = "gustave"
+                artifactId = "{{projectName}}"
                 version = rootProject.version as String
 
-                name.set("gustave")
+                name.set("{{projectName}}")
                 packaging = "jar"
-                url.set("https://github.com/martinbonnin/gustave")
+                url.set("https://github.com/{{githubRepo}}")
 
                 scm {
-                    url.set("https://github.com/martinbonnin/gustave")
-                    connection.set("https://github.com/martinbonnin/gustave")
-                    developerConnection.set("https://github.com/martinbonnin/gustave")
+                    url.set("https://github.com/{{githubRepo}}")
+                    connection.set("https://github.com/{{githubRepo}}")
+                    developerConnection.set("https://github.com/{{githubRepo}}")
                 }
 
                 licenses {
@@ -33,8 +33,8 @@ publishing {
 
                 developers {
                     developer {
-                        id.set("Martin Bonnin")
-                        name.set("Martin Bonnin")
+                        id.set("{{developer}}")
+                        name.set("{{developer}}")
                     }
                 }
             }
@@ -60,24 +60,10 @@ publishing {
     }
 }
 
-tasks.register("fatJar", org.gradle.jvm.tasks.Jar::class.java) {
-    manifest {
-        attributes["Main-Class"] = "net.mbonnin.gustave.MainKt"
-    }
-    archiveBaseName.set("gustave-all")
-
-    from(configurations.runtimeClasspath.get().map {
-        if (it.isDirectory) it else zipTree(it)
-    }
-    )
-    with(tasks.get("jar") as CopySpec)
-}
-
 repositories {
     mavenCentral()
 }
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("com.github.ajalt:clikt:2.6.0")
 }

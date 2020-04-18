@@ -96,4 +96,38 @@ class Gustave {
 
         println("Everything is done. Verify everything is ok and type `git push origin master --tags` to trigger the new version.")
     }
+
+    fun init(dir: File) {
+        check(!File(dir, "settings.gradle.kts").exists()) {
+            "a settings.gradle.kts file already exists in this directory"
+        }
+
+        val replacements = mapOf(
+                "projectName" to "dactylo",
+                "kotlinVersion" to "1.3.72",
+                "group" to "net.mbonnin",
+                "githubRepo" to "martinbonnin/dactylo",
+                "developer" to "Martin Bonnin"
+        )
+
+        copyResource("build.gradle.kts", dir, replacements)
+        copyResource("settings.gradle.kts", dir, replacements)
+
+        copyResource(".gitignore", dir, emptyMap())
+        copyResource("gradle.properties", dir, emptyMap())
+    }
+
+    private fun copyResource(resourceName: String, dir: File, replacements: Map<String, String>) {
+        val inputStream = this::class.java.classLoader.getResourceAsStream("/$resourceName")
+        check(inputStream != null) {
+            "cannot find resource: $resourceName"
+        }
+        var template = inputStream.reader().readText()
+
+        replacements.forEach {
+           template = template.replace("{{${it.key}}}", it.value)
+        }
+
+        File(dir, resourceName).writeText(template)
+    }
 }
