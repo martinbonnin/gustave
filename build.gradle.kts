@@ -1,4 +1,4 @@
-group = "net.mbonnin"
+group = "net.mbonnin.gustave"
 version = "0.0.3"
 
 subprojects {
