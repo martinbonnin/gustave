@@ -1,5 +1,5 @@
 group = "net.mbonnin"
-version = "0.0.3-SNAPSHOT"
+version = "0.0.3"
 
 subprojects {
     repositories {
