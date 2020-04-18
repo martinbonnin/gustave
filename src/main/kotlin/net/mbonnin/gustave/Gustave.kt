@@ -54,7 +54,7 @@ class Gustave {
     private fun getNextPatch(version: String) = getNext(version, 2)
     private fun getNextMinor(version: String) = getNext(version, 1)
     private fun getNextMajor(version: String) = getNext(version, 0)
-    
+
     fun makeRelease() {
         if (runCommand("git", "status", "--porcelain").isNotEmpty()) {
             println("Your git repo is not clean. Make sur to stash or commit your changes before making a release")
