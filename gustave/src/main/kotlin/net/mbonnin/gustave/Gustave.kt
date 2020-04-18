@@ -6,7 +6,7 @@ class Gustave {
     var versionGetter: () -> String = {
         val file = File("build.gradle.kts")
         val version = file.readLines().mapNotNull {
-            Regex("^version = \"(.*)").matchEntire(it)?.groupValues?.get(1)
+            Regex("^version = \"(.*)\"").matchEntire(it)?.groupValues?.get(1)
         }.firstOrNull()
 
         require(version != null) {
@@ -20,13 +20,25 @@ class Gustave {
         version.substringBeforeLast("-SNAPSHOT")
     }
 
-    var versionSetter: (String) -> Unit =  {version ->
+    var versionSetter: (String) -> Unit = { version ->
         val file = File("build.gradle.kts")
         val newContent = file.readLines().map {
             it.replace(Regex("^version = \".*\""), "version = \"$version\"")
         }.joinToString(separator = "\n", postfix = "\n")
         file.writeText(newContent)
     }
+
+    private fun runInteractiveCommand(vararg args: String) {
+        val builder = ProcessBuilder(*args)
+                .inheritIO()
+
+        val process = builder.start()
+        val ret = process.waitFor()
+        check(ret == 0) {
+            "error while executing ${args.joinToString(" ")}"
+        }
+    }
+
 
     private fun runCommand(vararg args: String): String {
         val builder = ProcessBuilder(*args)
@@ -54,7 +66,7 @@ class Gustave {
     private fun getNextPatch(version: String) = getNext(version, 2)
     private fun getNextMinor(version: String) = getNext(version, 1)
     private fun getNextMajor(version: String) = getNext(version, 0)
-    
+
     fun makeRelease() {
         if (runCommand("git", "status", "--porcelain").isNotEmpty()) {
             println("Your git repo is not clean. Make sur to stash or commit your changes before making a release")
@@ -95,5 +107,52 @@ class Gustave {
         runCommand("git", "commit", "-a", "-m", "version is now $snapshot")
 
         println("Everything is done. Verify everything is ok and type `git push origin master --tags` to trigger the new version.")
+    }
+
+    fun init(dir: File) {
+        check(!File(dir, "settings.gradle.kts").exists()) {
+            "a settings.gradle.kts file already exists in this directory"
+        }
+
+        val replacements = mapOf(
+                "projectName" to "dactylo",
+                "kotlinVersion" to "1.3.72",
+                "group" to "net.mbonnin",
+                "githubRepo" to "martinbonnin/dactylo",
+                "developer" to "Martin Bonnin"
+        )
+
+        copyResource("build.gradle.kts", dir, replacements)
+        copyResource("settings.gradle.kts", dir, replacements)
+
+        copyResource("dot_gitignore", dir, emptyMap())
+        // .gitignore is excluded by Gradle by default so I had to rename the file.
+        // See https://github.com/gradle/gradle/issues/2986
+        File(dir, "dot_gitignore").copyTo(File(dir, ".gitignore"))
+        File(dir, "dot_gitignore").delete()
+        copyResource("gradle.properties", dir, emptyMap())
+
+        File("src/main/kotlin/").mkdirs()
+
+        val allFiles = dir.listFiles().map { it.name }.toTypedArray()
+        runCommand("git", "init")
+        runCommand("git", "add", *allFiles)
+        runCommand("git", "commit", "-a", "-m", "Initial commit")
+
+        // should we add the gradle wrapper ?
+    }
+
+    private fun copyResource(resourceName: String, dir: File, replacements: Map<String, String>) {
+        val inputStream = this::class.java.classLoader.getResourceAsStream(resourceName)
+        check(inputStream != null) {
+            "cannot find resource: $resourceName"
+        }
+        var template = inputStream.reader().readText()
+
+        replacements.forEach {
+            template = template.replace("{{${it.key}}}", it.value)
+        }
+
+        File(dir, resourceName).writeText(template)
     }
 }
