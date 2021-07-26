@@ -104,7 +104,7 @@ class Gustave {
 
         val replacements = mapOf(
                 "projectName" to "dactylo",
-                "kotlinVersion" to "1.3.72",
+                "kotlinVersion" to "1.5.30-M1",
                 "group" to "net.mbonnin",
                 "githubRepo" to "martinbonnin/dactylo",
                 "developer" to "Martin Bonnin"
